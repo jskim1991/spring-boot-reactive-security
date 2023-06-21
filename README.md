@@ -1,4 +1,4 @@
-Construct your `application.yml`.
+Construct your `src/main/resources/application.yml`.
 Sample looks like this:
 ```yaml
 spring:
