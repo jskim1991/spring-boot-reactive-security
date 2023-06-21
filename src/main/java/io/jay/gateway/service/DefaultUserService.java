@@ -1,8 +1,8 @@
 package io.jay.gateway.service;
 
 import io.jay.gateway.client.login.NaverLoginClient;
-import io.jay.gateway.client.user.response.NaverUserResponse;
 import io.jay.gateway.client.user.NaverUserClient;
+import io.jay.gateway.client.user.response.NaverUserResponse;
 import io.jay.gateway.config.oauth2.NaverEndpointConfig;
 import io.jay.gateway.controller.LoginResponse;
 import io.jay.gateway.domain.AuthUserDetails;
@@ -15,6 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.keygen.Base64StringKeyGenerator;
+import org.springframework.security.crypto.keygen.StringKeyGenerator;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -22,6 +24,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.net.URLEncoder;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -37,6 +40,7 @@ public class DefaultUserService implements UserService, ReactiveUserDetailsServi
     private final UserDataMapper userDataMapper;
     private final JsonWebTokenUtil jsonWebTokenUtil;
     private final NaverEndpointConfig naverEndpointConfig;
+    private final StringKeyGenerator stateGenerator;
 
     Logger log = LoggerFactory.getLogger(DefaultUserService.class);
 
@@ -47,6 +51,7 @@ public class DefaultUserService implements UserService, ReactiveUserDetailsServi
         this.userDataMapper = userDataMapper;
         this.jsonWebTokenUtil = jsonWebTokenUtil;
         this.naverEndpointConfig = naverEndpointConfig;
+        stateGenerator = new Base64StringKeyGenerator(Base64.getUrlEncoder());
     }
 
     @Override
@@ -94,7 +99,7 @@ public class DefaultUserService implements UserService, ReactiveUserDetailsServi
                 .queryParam("client_id", naverEndpointConfig.clientId())
                 .queryParam("client_secret", naverEndpointConfig.clientSecret())
                 .queryParam("redirect_uri", URLEncoder.encode(naverEndpointConfig.redirectUri(), UTF_8))
-                .queryParam("state", URLEncoder.encode(naverEndpointConfig.state(), UTF_8))
+                .queryParam("state", URLEncoder.encode(stateGenerator.generateKey(), UTF_8))
                 .build();
 
         return Mono.just(uriComponents.toString());

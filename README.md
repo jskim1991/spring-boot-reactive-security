@@ -20,6 +20,5 @@ naver:
   response-type: "code"
   client-id: "" # REPLACE_WITH_YOUR_CLIENT_ID
   client-secret: "" # REPLACE_WITH_YOUR_CLIENT_SECRET
-  state: ""
   redirect-uri: "http://localhost:3000/redirect" # REPLACE_WITH_YOUR_REDIRECT_URI
 ```

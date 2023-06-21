@@ -8,6 +8,5 @@ public record NaverEndpointConfig(
         String responseType,
         String clientId,
         String clientSecret,
-        String state,
         String redirectUri) {
 }
