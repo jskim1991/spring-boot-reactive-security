@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
-import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -14,7 +13,6 @@ import org.springframework.security.web.server.context.NoOpServerSecurityContext
 import reactor.core.publisher.Mono;
 
 @Configuration
-@EnableReactiveMethodSecurity
 public class SecurityConfig {
 
     @Bean
@@ -37,8 +35,10 @@ public class SecurityConfig {
                         .pathMatchers("/login/**").permitAll()
                         .anyExchange().authenticated()
                 )
-                /* NOTE: If filter is a Spring bean then there is no need to manually add like this.
-                         Otherwise, it will execute the filter twice per request */
+
+                /* NOTE:
+                If filter is a Spring bean then there is no need to manually add like this.
+                Otherwise, it will execute the filter twice per request. */
                 .addFilterAt(new JsonWebTokenAuthenticationFilter(jsonWebTokenUtil, authenticationManager), SecurityWebFiltersOrder.HTTP_BASIC)
                 .build();
     }

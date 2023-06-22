@@ -31,7 +31,9 @@ public class JsonWebTokenAuthenticationFilter implements WebFilter {
             var claims = jwtUtil.parseToken(jwt);
             var user = new User(claims.getSubject());
 
-            /* NOTE: not authenticated until authenticationManager authenticates */
+            /* NOTE:
+            Not authenticated until authenticationManager authenticates with 2 constructor parameters for UsernamePasswordAuthenticationToken.
+            If we don't need extra information on user, we can just create UsernamePasswordAuthenticationToken with 3 constructor parameters. */
             var auth = new UsernamePasswordAuthenticationToken(new AuthUserDetails(user), null);
 
             return authenticationManager.authenticate(auth)
