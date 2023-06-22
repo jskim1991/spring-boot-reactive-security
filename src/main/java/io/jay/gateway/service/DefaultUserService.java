@@ -72,13 +72,13 @@ public class DefaultUserService implements UserService, ReactiveUserDetailsServi
                     var headers = Map.of(AUTHORIZATION, "Bearer " + token.accessToken());
                     return userClient.getUserInfo(headers)
                             .doOnNext(user -> log.info("user: {}", user))
-                            .flatMap(this::saveUser);
-                })
-                .flatMap(user -> {
-                    var userDetails = new AuthUserDetails(user);
-                    return Mono.just(new LoginResponse(jsonWebTokenUtil.createAccessToken(userDetails.getUsername(), userDetails.getAuthorities())));
+                            .flatMap(this::saveUser)
+                            .flatMap(user -> {
+                                var userDetails = new AuthUserDetails(user);
+                                var jwt = jsonWebTokenUtil.createAccessToken(userDetails.getUsername(), userDetails.getAuthorities());
+                                return Mono.just(new LoginResponse(jwt));
+                            });
                 });
-
     }
 
     private Mono<User> saveUser(NaverUserResponse user) {
