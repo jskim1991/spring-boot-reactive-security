@@ -73,6 +73,7 @@ public class DefaultUserService implements UserService, ReactiveUserDetailsServi
                     return userClient.getUserInfo(headers)
                             .doOnNext(user -> log.info("user: {}", user))
                             .flatMap(this::saveUser)
+                            .log()
                             .flatMap(user -> {
                                 var userDetails = new AuthUserDetails(user);
                                 var jwt = jsonWebTokenUtil.createAccessToken(userDetails.getUsername(), userDetails.getAuthorities());
@@ -82,14 +83,18 @@ public class DefaultUserService implements UserService, ReactiveUserDetailsServi
     }
 
     private Mono<User> saveUser(NaverUserResponse user) {
-        var userOptional = userJpaRepository.findByNaverId(user.response().id());
-        if (userOptional.isEmpty()) {
-            UserEntity userEntity = new UserEntity(user.response().id(), user.response().name(), user.response().nickname(), user.response().email());
-            var savedUser = userJpaRepository.save(userEntity);
-            return Mono.just(userDataMapper.toDomain(savedUser));
-        }
-
-        return Mono.just(userDataMapper.toDomain(userOptional.get()));
+        return Mono.fromCallable(() -> {
+                    var userOptional = userJpaRepository.findByNaverId(user.response().id());
+                    if (userOptional.isEmpty()) {
+                        UserEntity userEntity = new UserEntity(user.response().id(), user.response().name(), user.response().nickname(), user.response().email());
+                        var savedUser = userJpaRepository.save(userEntity);
+                        return savedUser;
+                    }
+                    return userOptional.get();
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .log()
+                .map(userDataMapper::toDomain);
     }
 
     @Override
@@ -110,7 +115,9 @@ public class DefaultUserService implements UserService, ReactiveUserDetailsServi
         return Mono.fromCallable(() -> {
                     var userOptional = userJpaRepository.findById(id);
                     return userOptional.orElseThrow(() -> new RuntimeException("User not found with id: " + id));
-                }).subscribeOn(Schedulers.boundedElastic())
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .log()
                 .map(userEntity -> {
                     var user = userDataMapper.toDomain(userEntity);
                     return new AuthUserDetails(user);
